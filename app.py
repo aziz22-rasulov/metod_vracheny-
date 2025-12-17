@@ -27,10 +27,11 @@ def compute_rotation(A, p, q):
     if abs(A[p, q]) < 1e-20:
         return 1.0, 0.0
     
+    # Используем правильный порядок в знаменателе
     if abs(A[p, p] - A[q, q]) < 1e-12:
         theta = np.pi/4 if A[p, q] > 0 else -np.pi/4
     else:
-        theta = 0.5 * np.arctan2(2 * A[p, q], A[p, p] - A[q, q])
+        theta = 0.5 * np.arctan2(2 * A[p, q], A[q, q] - A[p, p])
     
     c = np.cos(theta)
     s = np.sin(theta)

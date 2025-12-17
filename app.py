@@ -24,14 +24,14 @@ def find_max_offdiag(A):
 
 # Функция для вычисления угла вращения
 def compute_rotation(A, p, q):
-if abs(A[p, p] - A[q, q]) < 1e-12:
-    theta = np.pi/4 if A[p, q] > 0 else -np.pi/4
-else:
-    tau = (A[q, q] - A[p, p])/(2*A[p, q])
-    t = np.sign(tau)/(abs(tau) + np.sqrt(1 + tau**2))
-    c = 1/np.sqrt(1 + t**2)
-    s = t*c
-    return c, s
+    if abs(A[p, p] - A[q, q]) < 1e-12:
+        theta = np.pi/4 if A[p, q] > 0 else -np.pi/4
+    else:
+        tau = (A[q, q] - A[p, p])/(2*A[p, q])
+        t = np.sign(tau)/(abs(tau) + np.sqrt(1 + tau**2))
+        c = 1/np.sqrt(1 + t**2)
+        s = t*c
+        return c, s
 
 # Функция для выполнения вращения
 def rotate(A, V, p, q, c, s):

@@ -1,5 +1,6 @@
 import streamlit as st
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 import time
 
@@ -78,7 +79,11 @@ def jacobi_method(A, eps=1e-8, max_iter=1000):
         p, q, max_offdiag = find_max_offdiag(A_current)
         
         # Норма внедиагональных элементов для критерия остановки
-        off_diag_norm = np.sqrt(np.sum(A_current**2) - np.sum(np.diag(A_current)**2))
+        off_diag_sum = 0
+        for i in range(n):
+            for j in range(i+1, n):
+                off_diag_sum += A_current[i, j]**2
+        off_diag_norm = np.sqrt(2 * off_diag_sum)
         off_diag_norms.append(off_diag_norm)
         
         if max_offdiag < eps:
@@ -163,7 +168,7 @@ for i in range(n):
 
 # Отображение текущей матрицы
 st.subheader("Текущая матрица:")
-st.dataframe(matrix_input)
+st.dataframe(pd.DataFrame(matrix_input))
 
 # Проверка симметричности
 if not is_symmetric(matrix_input):
@@ -181,18 +186,27 @@ else:
         
         # Отображение результатов
         st.header("Результаты вычислений")
-        st.metric("Время вычислений", f"{end_time - start_time:.6f} секунд")
-        st.metric("Число итераций", iterations)
+        col1, col2 = st.columns(2)
+        with col1:
+            st.metric("Время вычислений", f"{end_time - start_time:.6f} секунд")
+        with col2:
+            st.metric("Число итераций", iterations)
         
         # Собственные значения
         st.subheader("Собственные значения:")
-        eigenvalues_df = np.column_stack((np.arange(1, len(eigenvalues)+1), eigenvalues))
-        st.dataframe(eigenvalues_df, column_names=["№", "Значение"])
+        eigenvalues_df = pd.DataFrame({
+            "№": range(1, len(eigenvalues)+1),
+            "Значение": eigenvalues
+        })
+        st.dataframe(eigenvalues_df)
         
         # Собственные векторы
         st.subheader("Собственные векторы:")
         st.markdown("Каждый столбец матрицы ниже - это собственный вектор, соответствующий собственному значению")
-        st.dataframe(eigenvectors)
+        eigenvectors_df = pd.DataFrame(eigenvectors)
+        eigenvectors_df.columns = [f"Вектор {i+1}" for i in range(eigenvectors.shape[1])]
+        eigenvectors_df.index = [f"x{i+1}" for i in range(eigenvectors.shape[0])]
+        st.dataframe(eigenvectors_df)
         
         # Проверка решения
         st.subheader("Проверка решения")
@@ -204,8 +218,11 @@ else:
             st.warning(f"⚠️ **Предупреждение:** Невязка велика. Максимальная невязка: {max_residual:.2e}", icon="⚠️")
         
         # Таблица невязок для каждого вектора
-        residuals_df = np.column_stack((np.arange(1, len(residuals)+1), residuals))
-        st.dataframe(residuals_df, column_names=["Вектор №", "Невязка"])
+        residuals_df = pd.DataFrame({
+            "Вектор №": range(1, len(residuals)+1),
+            "Невязка": residuals
+        })
+        st.dataframe(residuals_df)
         
         # График сходимости
         st.subheader("График сходимости")
@@ -250,11 +267,10 @@ else:
             
             # Таблица результатов
             st.subheader("Таблица результатов исследования")
-            results_data = []
-            for eps_val, iters, t in convergence_results:
-                results_data.append([f"{eps_val:.0e}", iters, f"{t:.6f}"])
-            
-            st.table(results_data, columns=["Точность (ε)", "Число итераций", "Время (сек)"])
+            results_df = pd.DataFrame(convergence_results, columns=["Точность (ε)", "Число итераций", "Время (сек)"])
+            results_df["Точность (ε)"] = results_df["Точность (ε)"].apply(lambda x: f"{x:.0e}")
+            results_df["Время (сек)"] = results_df["Время (сек)"].apply(lambda x: f"{x:.6f}")
+            st.dataframe(results_df)
 
 # Справочная информация
 with st.sidebar:
@@ -275,6 +291,3 @@ with st.sidebar:
     
     st.markdown("**Важно:** Метод применим только для симметричных матриц, т.е. матриц, для которых A = Aᵀ.")
 
-# Нижний колонтитул
-st.markdown("---")
-st.markdown("Разработано с ❤️ для изучения вычислительной математики")
